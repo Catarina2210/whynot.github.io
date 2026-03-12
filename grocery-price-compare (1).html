@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CartWatch — Grocery Price Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f8f5;
+  --white: #ffffff;
+  --border: #e8ebe3;
+  --border2: #d4d9cc;
+  --text: #1a1e14;
+  --muted: #7a8070;
+  --light: #f0f2ec;
+  --green: #2e7d52;
+  --green-light: #e8f5ee;
+  --green-mid: #4caf7d;
+  --red: #c0392b;
+  --blue: #2563a8;
+  --blue-light: #e8f0fb;
+  --amber: #d97706;
+  --amber-light: #fef3c7;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+  --radius: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: 'Nunito', sans-serif; font-weight: 400; min-height: 100vh; }
+
+header { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 40px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm); }
+.header-inner { max-width: 1400px; margin: 0 auto; height: 68px; display: flex; align-items: center; gap: 20px; }
+.logo { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+.logo .dot { color: var(--green); }
+.logo-sub { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; }
+.divider-v { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+.country-toggle { display: flex; background: var(--light); border-radius: 30px; padding: 3px; gap: 2px; }
+.ctry-btn { padding: 6px 16px; border-radius: 26px; font-size: 0.76rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--muted); font-family: 'Nunito', sans-serif; transition: all 0.2s; }
+.ctry-btn.active-ca { background: #fff0ee; color: var(--red); box-shadow: var(--shadow-sm); }
+.ctry-btn.active-us { background: var(--blue-light); color: var(--blue); box-shadow: var(--shadow-sm); }
+.ctry-btn.active-all { background: var(--white); color: var(--text); box-shadow: var(--shadow-sm); }
+.header-search { flex: 1; max-width: 340px; position: relative; }
+.header-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); width: 15px; height: 15px; pointer-events: none; }
+.header-search input { width: 100%; background: var(--light); border: 1.5px solid transparent; border-radius: 30px; color: var(--text); font-family: 'Nunito', sans-serif; font-size: 0.83rem; padding: 9px 16px 9px 35px; outline: none; transition: all 0.2s; }
+.header-search input:focus { background: var(--white); border-color: var(--green-mid); }
+.header-search input::placeholder { color: var(--muted); }
+.updated-tag { margin-left: auto; font-size: 0.67rem; color: var(--muted); white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+.updated-dot { width: 6px; height: 6px; background: var(--green-mid); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+
+.hero { background: linear-gradient(135deg, #1a4731 0%, #2e7d52 60%, #3a9966 100%); padding: 36px 40px 32px; position: relative; overflow: hidden; }
+.hero::after { content:''; position:absolute; right:-60px; bottom:-80px; width:300px; height:300px; border-radius:50%; background:rgba(255,255,255,0.04); }
+.hero-inner { max-width:1400px; margin:0 auto; position:relative; z-index:1; }
+.hero h1 { font-family:'Playfair Display',serif; font-size:2rem; color:#fff; font-weight:700; letter-spacing:-0.03em; margin-bottom:7px; line-height:1.15; }
+.hero p { color:rgba(255,255,255,0.7); font-size:0.88rem; max-width:520px; }
+.hero-stats { display:flex; gap:20px; margin-top:20px; flex-wrap:wrap; }
+.hstat { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:10px 16px; }
+.hstat-n { font-family:'Playfair Display',serif; font-size:1.35rem; font-weight:700; color:#fff; line-height:1; }
+.hstat-l { font-size:0.66rem; color:rgba(255,255,255,0.6); margin-top:3px; letter-spacing:0.06em; text-transform:uppercase; }
+
+.best-banner { background:var(--white); border-bottom:1px solid var(--border); padding:12px 40px; }
+.best-banner-inner { max-width:1400px; margin:0 auto; display:flex; align-items:center; gap:10px; }
+.best-label { font-size:0.68rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--amber); background:var(--amber-light); padding:3px 10px; border-radius:20px; white-space:nowrap; }
+.best-text { font-size:0.82rem; color:var(--text); font-weight:500; }
+.best-text span { color:var(--green); font-weight:700; }
+
+.filter-bar { background:var(--white); border-bottom:1px solid var(--border); padding:0 40px; position:sticky; top:68px; z-index:90; }
+.filter-inner { max-width:1400px; margin:0 auto; display:flex; gap:6px; align-items:center; height:50px; overflow-x:auto; scrollbar-width:none; }
+.filter-inner::-webkit-scrollbar { display:none; }
+.cat-btn { display:flex; align-items:center; gap:4px; padding:6px 14px; border-radius:30px; font-size:0.76rem; font-weight:600; cursor:pointer; border:1.5px solid var(--border); background:transparent; color:var(--muted); font-family:'Nunito',sans-serif; transition:all 0.18s; white-space:nowrap; }
+.cat-btn:hover { border-color:var(--green-mid); color:var(--green); }
+.cat-btn.active { background:var(--green); color:#fff; border-color:var(--green); }
+.sort-sep { width:1px; height:22px; background:var(--border); margin:0 6px; flex-shrink:0; }
+.sort-label { font-size:0.68rem; color:var(--muted); white-space:nowrap; font-weight:500; }
+.sort-sel { background:var(--light); border:1.5px solid var(--border); border-radius:8px; color:var(--text); font-family:'Nunito',sans-serif; font-size:0.76rem; font-weight:600; padding:5px 10px; cursor:pointer; outline:none; }
+
+.main-wrap { max-width:1400px; margin:0 auto; padding:24px 40px 80px; }
+.results-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.results-count { font-size:0.79rem; color:var(--muted); font-weight:500; }
+.results-count strong { color:var(--text); }
+
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(285px,1fr)); gap:16px; }
+
+.card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:box-shadow 0.22s,transform 0.22s; animation:cardIn 0.35s ease both; }
+.card:hover { box-shadow:var(--shadow-lg); transform:translateY(-3px); }
+@keyframes cardIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+.card-img-wrap { position:relative; height:165px; overflow:hidden; background:var(--light); }
+.card-img-wrap img { width:100%; height:100%; object-fit:cover; transition:transform 0.4s ease; display:block; }
+.card:hover .card-img-wrap img { transform:scale(1.06); }
+.img-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:3.2rem; background:linear-gradient(135deg,#f0f4ee,#e4ece0); }
+.card-country-badge { position:absolute; top:10px; right:10px; font-size:0.63rem; font-weight:700; letter-spacing:0.08em; padding:3px 9px; border-radius:20px; backdrop-filter:blur(8px); }
+.badge-ca { background:rgba(255,255,255,0.9); color:var(--red); }
+.badge-us { background:rgba(255,255,255,0.9); color:var(--blue); }
+.card-cat-badge { position:absolute; top:10px; left:10px; font-size:0.61rem; font-weight:600; letter-spacing:0.06em; padding:3px 9px; border-radius:20px; background:rgba(255,255,255,0.9); color:var(--muted); backdrop-filter:blur(8px); text-transform:capitalize; }
+
+.card-body { padding:14px 16px 10px; }
+.card-name { font-family:'Playfair Display',serif; font-size:1.02rem; font-weight:600; color:var(--text); letter-spacing:-0.01em; margin-bottom:2px; }
+.card-unit { font-size:0.68rem; color:var(--muted); font-weight:500; margin-bottom:12px; }
+.price-rows { display:flex; flex-direction:column; gap:2px; }
+.prow { display:flex; align-items:center; gap:7px; padding:6px 8px; border-radius:8px; transition:background 0.15s; }
+.prow:hover { background:var(--light); }
+.prow.best { background:var(--green-light); }
+.prow-store { flex:1; font-size:0.76rem; color:var(--text); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.prow.best .prow-store { color:var(--green); font-weight:600; }
+.prow-bar-wrap { width:52px; height:4px; background:var(--border); border-radius:2px; flex-shrink:0; }
+.prow-bar { height:100%; border-radius:2px; background:var(--border2); transition:width 0.5s ease; }
+.prow.best .prow-bar { background:var(--green-mid); }
+.prow-price { font-family:'Playfair Display',serif; font-size:0.98rem; font-weight:700; color:var(--text); white-space:nowrap; }
+.prow.best .prow-price { color:var(--green); }
+.prow-cur { font-size:0.58rem; color:var(--muted); font-weight:600; letter-spacing:0.06em; width:22px; }
+.best-tick { font-size:0.57rem; font-weight:700; color:var(--green); letter-spacing:0.06em; background:#c8f0d8; padding:2px 6px; border-radius:10px; flex-shrink:0; }
+
+.card-footer { display:flex; align-items:center; justify-content:space-between; padding:9px 16px 13px; border-top:1px solid var(--border); margin-top:8px; }
+.cf-avg { font-size:0.7rem; color:var(--muted); }
+.cf-avg strong { color:var(--text); font-weight:600; }
+.cf-save { font-size:0.7rem; font-weight:700; color:var(--green); background:var(--green-light); padding:3px 10px; border-radius:20px; }
+
+.empty-state { grid-column:1/-1; text-align:center; padding:100px 24px; }
+.empty-state h3 { font-family:'Playfair Display',serif; font-size:1.2rem; margin-bottom:8px; }
+.empty-state p { color:var(--muted); font-size:0.84rem; }
+
+@media(max-width:768px){
+  header,.hero,.best-banner,.filter-bar{padding-left:16px;padding-right:16px}
+  .main-wrap{padding:18px 16px 60px}
+  .hero h1{font-size:1.5rem}
+  .grid{grid-template-columns:1fr 1fr;gap:12px}
+  .logo-sub,.updated-tag,.divider-v{display:none}
+  .prow-bar-wrap{display:none}
+}
+@media(max-width:480px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="logo">Cart<span class="dot">Watch</span></div>
+      <div class="logo-sub">Canada &amp; USA · March 2026</div>
+    </div>
+    <div class="divider-v"></div>
+    <div class="country-toggle">
+      <button class="ctry-btn active-ca" id="btn-ca" onclick="setCountry('CA')">🍁 Canada</button>
+      <button class="ctry-btn" id="btn-us" onclick="setCountry('US')">🦅 USA</button>
+      <button class="ctry-btn" id="btn-all" onclick="setCountry('ALL')">🌎 Both</button>
+    </div>
+    <div class="header-search">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search" placeholder="Search eggs, beef, broccoli…" oninput="render()">
+    </div>
+    <div class="updated-tag"><div class="updated-dot"></div>Updated Mar 11, 2026</div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1>Compare Grocery Prices<br>Across Every Major Store</h1>
+    <p>Real prices. See exactly where to buy each item for less — across Canada and the United States.</p>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-n">121</div><div class="hstat-l">Items tracked</div></div>
+      <div class="hstat"><div class="hstat-n">10</div><div class="hstat-l">Major retailers</div></div>
+      <div class="hstat"><div class="hstat-n">2</div><div class="hstat-l">Countries</div></div>
+      <div class="hstat"><div class="hstat-n" id="avg-save-stat">—</div><div class="hstat-l">Avg max saving</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="best-banner">
+  <div class="best-banner-inner">
+    <span style="font-size:1rem">🏆</span>
+    <span class="best-label">Best Deal</span>
+    <span class="best-text" id="best-text">Loading…</span>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-inner">
+    <button class="cat-btn active" onclick="setCat('all',this)">All</button>
+    <button class="cat-btn" onclick="setCat('dairy',this)">🥛 Dairy</button>
+    <button class="cat-btn" onclick="setCat('produce',this)">🥦 Produce</button>
+    <button class="cat-btn" onclick="setCat('meat',this)">🥩 Meat</button>
+    <button class="cat-btn" onclick="setCat('seafood',this)">🐟 Seafood</button>
+    <button class="cat-btn" onclick="setCat('frozen',this)">🧊 Frozen</button>
+    <button class="cat-btn" onclick="setCat('pantry',this)">🧺 Pantry</button>
+    <button class="cat-btn" onclick="setCat('bakery',this)">🍞 Bakery</button>
+    <button class="cat-btn" onclick="setCat('beverages',this)">☕ Beverages</button>
+    <button class="cat-btn" onclick="setCat('snacks',this)">🍪 Snacks</button>
+    <button class="cat-btn" onclick="setCat('household',this)">🧴 Household</button>
+    <div class="sort-sep"></div>
+    <span class="sort-label">Sort:</span>
+    <select class="sort-sel" onchange="setSort(this.value)">
+      <option value="name">Name A–Z</option>
+      <option value="cheapest">Cheapest First</option>
+      <option value="savings">Best Savings</option>
+      <option value="category">By Category</option>
+    </select>
+  </div>
+</div>
+
+<div class="main-wrap">
+  <div class="results-bar"><div class="results-count" id="res-count"></div></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+const PHOTOS = {
+  'eggs':           'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=400&q=80&fit=crop',
+  'milk':           'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80&fit=crop',
+  'butter':         'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400&q=80&fit=crop',
+  'cheddar':        'https://images.unsplash.com/photo-1618164436241-4473940d1f5c?w=400&q=80&fit=crop',
+  'yogurt':         'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&q=80&fit=crop',
+  'cream cheese':   'https://images.unsplash.com/photo-1559181567-c3190ca9d5db?w=400&q=80&fit=crop',
+  'sour cream':     'https://images.unsplash.com/photo-1631454079699-9bec7e27fd9e?w=400&q=80&fit=crop',
+  'broccoli':       'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&q=80&fit=crop',
+  'lettuce':        'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&q=80&fit=crop',
+  'spinach':        'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&q=80&fit=crop',
+  'celery':         'https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=400&q=80&fit=crop',
+  'carrots':        'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&q=80&fit=crop',
+  'onions':         'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&q=80&fit=crop',
+  'garlic':         'https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=400&q=80&fit=crop',
+  'potatoes':       'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&q=80&fit=crop',
+  'sweet potatoes': 'https://images.unsplash.com/photo-1596097558832-cf6f8eff9e85?w=400&q=80&fit=crop',
+  'tomatoes':       'https://images.unsplash.com/photo-1546094096-0df4bcabd337?w=400&q=80&fit=crop',
+  'cucumber':       'https://images.unsplash.com/photo-1568584711271-6c929fb49b60?w=400&q=80&fit=crop',
+  'bell peppers':   'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&q=80&fit=crop',
+  'mushrooms':      'https://images.unsplash.com/photo-1504545102780-26774c1bb073?w=400&q=80&fit=crop',
+  'zucchini':       'https://images.unsplash.com/photo-1612197527762-8cfb6b5f6e7e?w=400&q=80&fit=crop',
+  'corn':           'https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400&q=80&fit=crop',
+  'avocado':        'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=400&q=80&fit=crop',
+  'bananas':        'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&q=80&fit=crop',
+  'apples':         'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&q=80&fit=crop',
+  'oranges':        'https://images.unsplash.com/photo-1547514701-42782101795e?w=400&q=80&fit=crop',
+  'strawberries':   'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&q=80&fit=crop',
+  'blueberries':    'https://images.unsplash.com/photo-1498557850523-fd3d118b962e?w=400&q=80&fit=crop',
+  'grapes':         'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=400&q=80&fit=crop',
+  'lemons':         'https://images.unsplash.com/photo-1582476703-1bb4d8dbd1d5?w=400&q=80&fit=crop',
+  'limes':          'https://images.unsplash.com/photo-1590502593747-42a996133562?w=400&q=80&fit=crop',
+  'ground beef':    'https://images.unsplash.com/photo-1588347818988-4c65b2b77c0f?w=400&q=80&fit=crop',
+  'beef steak':     'https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=400&q=80&fit=crop',
+  'chicken breast': 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&q=80&fit=crop',
+  'pork chops':     'https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=400&q=80&fit=crop',
+  'bacon':          'https://images.unsplash.com/photo-1528607929212-2636ec44253e?w=400&q=80&fit=crop',
+  'hot dogs':       'https://images.unsplash.com/photo-1612392062631-94aefa3d9e41?w=400&q=80&fit=crop',
+  'sausage':        'https://images.unsplash.com/photo-1601593346740-925612772716?w=400&q=80&fit=crop',
+  'turkey':         'https://images.unsplash.com/photo-1574672280600-4accfa5b6f98?w=400&q=80&fit=crop',
+  'salmon':         'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&q=80&fit=crop',
+  'shrimp':         'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=400&q=80&fit=crop',
+  'tuna':           'https://images.unsplash.com/photo-1571167366136-b57e07b4a9e5?w=400&q=80&fit=crop',
+  'ice cream':      'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=400&q=80&fit=crop',
+  'frozen berries': 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400&q=80&fit=crop',
+  'frozen peas':    'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&q=80&fit=crop',
+  'frozen pizza':   'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80&fit=crop',
+  'pasta':          'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400&q=80&fit=crop',
+  'rice':           'https://images.unsplash.com/photo-1568347355280-d33fdf77d42a?w=400&q=80&fit=crop',
+  'olive oil':      'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80&fit=crop',
+  'peanut butter':  'https://images.unsplash.com/photo-1560717845-968823efbee1?w=400&q=80&fit=crop',
+  'canned beans':   'https://images.unsplash.com/photo-1584583570840-0a3b9f13e4fb?w=400&q=80&fit=crop',
+  'canned tomatoes':'https://images.unsplash.com/photo-1589118949245-7d38baf380d6?w=400&q=80&fit=crop',
+  'oats':           'https://images.unsplash.com/photo-1614961233913-a5113a4a34ed?w=400&q=80&fit=crop',
+  'flour':          'https://images.unsplash.com/photo-1614961908596-5e2e8a98c5b8?w=400&q=80&fit=crop',
+  'honey':          'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&q=80&fit=crop',
+  'mayonnaise':     'https://images.unsplash.com/photo-1576169783062-cde278d69c8c?w=400&q=80&fit=crop',
+  'ketchup':        'https://images.unsplash.com/photo-1542587222-b8b1b78f7742?w=400&q=80&fit=crop',
+  'soy sauce':      'https://images.unsplash.com/photo-1617622141573-0ce3d7a3c0a9?w=400&q=80&fit=crop',
+  'broth':          'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&q=80&fit=crop',
+  'white bread':    'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80&fit=crop',
+  'wheat bread':    'https://images.unsplash.com/photo-1549931319-a545dcf3bc7b?w=400&q=80&fit=crop',
+  'bagels':         'https://images.unsplash.com/photo-1607532941433-304659e8198a?w=400&q=80&fit=crop',
+  'tortillas':      'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400&q=80&fit=crop',
+  'coffee':         'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=400&q=80&fit=crop',
+  'orange juice':   'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=400&q=80&fit=crop',
+  'apple juice':    'https://images.unsplash.com/photo-1576673442511-7e39b6545c87?w=400&q=80&fit=crop',
+  'sparkling water':'https://images.unsplash.com/photo-1596803244897-3b14413ea16b?w=400&q=80&fit=crop',
+  'green tea':      'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&q=80&fit=crop',
+  'chips':          'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400&q=80&fit=crop',
+  'crackers':       'https://images.unsplash.com/photo-1590080875852-a57a4b7a0bf5?w=400&q=80&fit=crop',
+  'granola bars':   'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400&q=80&fit=crop',
+  'popcorn':        'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=400&q=80&fit=crop',
+  'almonds':        'https://images.unsplash.com/photo-1574570228837-afacd57c9ea1?w=400&q=80&fit=crop',
+  'chocolate':      'https://images.unsplash.com/photo-1514516816566-de580c621376?w=400&q=80&fit=crop',
+  'dish soap':      'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=400&q=80&fit=crop',
+  'paper towels':   'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400&q=80&fit=crop',
+  'toilet paper':   'https://images.unsplash.com/photo-1584556326561-84b04f08d73b?w=400&q=80&fit=crop',
+  'laundry':        'https://images.unsplash.com/photo-1604335398950-13d5b75a0038?w=400&q=80&fit=crop',
+  'sugar':          'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80&fit=crop',
+  'grapes':         'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=400&q=80&fit=crop',
+  'tilapia':        'https://images.unsplash.com/photo-1534482421-64566f976cfa?w=400&q=80&fit=crop',
+  'cod':            'https://images.unsplash.com/photo-1580822184713-fc5400e7fe10?w=400&q=80&fit=crop',
+  'shampoo':        'https://images.unsplash.com/photo-1585232350449-37f74a34a2f9?w=400&q=80&fit=crop',
+  'conditioner':    'https://images.unsplash.com/photo-1619451334792-150fd785ee74?w=400&q=80&fit=crop',
+  'body lotion':    'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&q=80&fit=crop',
+  'body wash':      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80&fit=crop',
+  'toothpaste':     'https://images.unsplash.com/photo-1559591937-abc2a3de15c8?w=400&q=80&fit=crop',
+  'toothbrush':     'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=400&q=80&fit=crop',
+  'deodorant':      'https://images.unsplash.com/photo-1631390190551-f52572c72f27?w=400&q=80&fit=crop',
+  'hand soap':      'https://images.unsplash.com/photo-1584553421349-3557471bed79?w=400&q=80&fit=crop',
+  'facial cleanser':'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=400&q=80&fit=crop',
+  'sunscreen':      'https://images.unsplash.com/photo-1521338139776-3c5dc56b3dae?w=400&q=80&fit=crop',
+  'razors':         'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=400&q=80&fit=crop',
+  'cotton swabs':   'https://images.unsplash.com/photo-1612532275214-e4ca76d0e4d1?w=400&q=80&fit=crop',
+  'floss':          'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=400&q=80&fit=crop',
+};
+
+function getPhoto(key) {
+  if (!key) return null;
+  const k = key.toLowerCase();
+  for (const [name, url] of Object.entries(PHOTOS)) {
+    if (k.includes(name) || name.includes(k)) return url;
+  }
+  return null;
+}
+
+const ITEMS = [
+// DAIRY CA
+{id:1,name:"Eggs",unit:"1 dozen large",cat:"dairy",country:"CA",photo:"eggs",stores:[{s:"Walmart",f:"🛒",p:3.93,c:"CAD"},{s:"Loblaws",f:"🛍️",p:3.93,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.93,c:"CAD"},{s:"Metro",f:"🏬",p:4.19,c:"CAD"},{s:"Costco",f:"📦",p:3.79,c:"CAD",n:"30-ct/doz est"}]},
+{id:2,name:"Milk 2%",unit:"4 litres",cat:"dairy",country:"CA",photo:"milk",stores:[{s:"Walmart",f:"🛒",p:6.25,c:"CAD"},{s:"Loblaws",f:"🛍️",p:6.25,c:"CAD"},{s:"Sobeys",f:"🏪",p:6.25,c:"CAD"},{s:"Metro",f:"🏬",p:6.49,c:"CAD"},{s:"Costco",f:"📦",p:5.89,c:"CAD",n:"2×4L"}]},
+{id:3,name:"Butter",unit:"454 g",cat:"dairy",country:"CA",photo:"butter",stores:[{s:"Walmart",f:"🛒",p:4.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:6.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:6.29,c:"CAD"},{s:"Costco",f:"📦",p:5.49,c:"CAD"}]},
+{id:4,name:"Cheddar Cheese",unit:"400 g block",cat:"dairy",country:"CA",photo:"cheddar",stores:[{s:"Walmart",f:"🛒",p:6.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:7.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:7.49,c:"CAD"},{s:"Costco",f:"📦",p:5.49,c:"CAD"}]},
+{id:5,name:"Greek Yogurt",unit:"750 g",cat:"dairy",country:"CA",photo:"yogurt",stores:[{s:"Walmart",f:"🛒",p:5.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:6.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:6.49,c:"CAD"},{s:"Costco",f:"📦",p:4.99,c:"CAD"}]},
+{id:6,name:"Cream Cheese",unit:"250 g",cat:"dairy",country:"CA",photo:"cream cheese",stores:[{s:"Walmart",f:"🛒",p:3.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:4.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:4.29,c:"CAD"}]},
+{id:7,name:"Sour Cream",unit:"500 mL",cat:"dairy",country:"CA",photo:"sour cream",stores:[{s:"Walmart",f:"🛒",p:2.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:3.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.29,c:"CAD"}]},
+// DAIRY US
+{id:8,name:"Eggs",unit:"1 dozen large",cat:"dairy",country:"US",photo:"eggs",stores:[{s:"Walmart",f:"🛒",p:4.38,c:"USD"},{s:"Aldi",f:"🏷️",p:3.19,c:"USD"},{s:"Costco",f:"📦",p:4.29,c:"USD",n:"2 doz organic"},{s:"Trader Joe's",f:"🌻",p:5.99,c:"USD"},{s:"Kroger",f:"🛍️",p:4.49,c:"USD"}]},
+{id:9,name:"Whole Milk",unit:"1 gallon",cat:"dairy",country:"US",photo:"milk",stores:[{s:"Walmart",f:"🛒",p:3.68,c:"USD"},{s:"Aldi",f:"🏷️",p:3.49,c:"USD"},{s:"Costco",f:"📦",p:3.19,c:"USD"},{s:"Trader Joe's",f:"🌻",p:3.99,c:"USD"},{s:"Kroger",f:"🛍️",p:3.79,c:"USD"}]},
+{id:10,name:"Greek Yogurt",unit:"32 oz",cat:"dairy",country:"US",photo:"yogurt",stores:[{s:"Walmart",f:"🛒",p:4.98,c:"USD"},{s:"Aldi",f:"🏷️",p:3.89,c:"USD"},{s:"Costco",f:"📦",p:3.29,c:"USD"},{s:"Trader Joe's",f:"🌻",p:4.49,c:"USD"},{s:"Kroger",f:"🛍️",p:5.49,c:"USD"}]},
+{id:11,name:"Butter",unit:"1 lb",cat:"dairy",country:"US",photo:"butter",stores:[{s:"Walmart",f:"🛒",p:3.98,c:"USD"},{s:"Aldi",f:"🏷️",p:3.49,c:"USD"},{s:"Costco",f:"📦",p:2.99,c:"USD",n:"4-pack"},{s:"Trader Joe's",f:"🌻",p:4.49,c:"USD"},{s:"Kroger",f:"🛍️",p:4.99,c:"USD"}]},
+// PRODUCE CA
+{id:12,name:"Broccoli",unit:"per head",cat:"produce",country:"CA",photo:"broccoli",stores:[{s:"Walmart",f:"🛒",p:2.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:3.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.29,c:"CAD"},{s:"Metro",f:"🏬",p:3.29,c:"CAD"},{s:"Costco",f:"📦",p:1.99,c:"CAD",n:"2-pack"}]},
+{id:13,name:"Romaine Lettuce",unit:"1 head",cat:"produce",country:"CA",photo:"lettuce",stores:[{s:"Walmart",f:"🛒",p:2.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:2.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:2.79,c:"CAD"},{s:"Metro",f:"🏬",p:2.99,c:"CAD"}]},
+{id:14,name:"Spinach",unit:"142 g bag",cat:"produce",country:"CA",photo:"spinach",stores:[{s:"Walmart",f:"🛒",p:2.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:3.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.49,c:"CAD"}]},
+{id:15,name:"Celery",unit:"1 bunch",cat:"produce",country:"CA",photo:"celery",stores:[{s:"Walmart",f:"🛒",p:2.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:2.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:2.79,c:"CAD"},{s:"Metro",f:"🏬",p:2.99,c:"CAD"}]},
+{id:16,name:"Carrots",unit:"2 lb bag",cat:"produce",country:"CA",photo:"carrots",stores:[{s:"Walmart",f:"🛒",p:2.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:2.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:2.79,c:"CAD"},{s:"Costco",f:"📦",p:2.49,c:"CAD",n:"5 lb bag"}]},
+{id:17,name:"Yellow Onions",unit:"3 lb bag",cat:"produce",country:"CA",photo:"onions",stores:[{s:"Walmart",f:"🛒",p:3.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:3.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.49,c:"CAD"},{s:"Metro",f:"🏬",p:3.99,c:"CAD"}]},
+{id:18,name:"Garlic",unit:"3-bulb pack",cat:"produce",country:"CA",photo:"garlic",stores:[{s:"Walmart",f:"🛒",p:1.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:2.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:2.29,c:"CAD"}]},
+{id:19,name:"Potatoes",unit:"5 lb bag",cat:"produce",country:"CA",photo:"potatoes",stores:[{s:"Walmart",f:"🛒",p:5.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:6.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:5.99,c:"CAD"},{s:"Costco",f:"📦",p:4.99,c:"CAD",n:"10 lb bag"}]},
+{id:20,name:"Sweet Potatoes",unit:"per lb",cat:"produce",country:"CA",photo:"sweet potatoes",stores:[{s:"Walmart",f:"🛒",p:1.27,c:"CAD"},{s:"Loblaws",f:"🛍️",p:1.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:1.69,c:"CAD"}]},
+{id:21,name:"Tomatoes (roma)",unit:"per lb",cat:"produce",country:"CA",photo:"tomatoes",stores:[{s:"Walmart",f:"🛒",p:1.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:2.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:2.29,c:"CAD"},{s:"Metro",f:"🏬",p:2.49,c:"CAD"}]},
+{id:22,name:"Cucumber",unit:"each",cat:"produce",country:"CA",photo:"cucumber",stores:[{s:"Walmart",f:"🛒",p:1.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:1.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:1.69,c:"CAD"}]},
+{id:23,name:"Bell Peppers",unit:"3-pack",cat:"produce",country:"CA",photo:"bell peppers",stores:[{s:"Walmart",f:"🛒",p:3.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:4.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:4.49,c:"CAD"},{s:"Costco",f:"📦",p:3.49,c:"CAD"}]},
+{id:24,name:"Mushrooms",unit:"227 g",cat:"produce",country:"CA",photo:"mushrooms",stores:[{s:"Walmart",f:"🛒",p:2.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:3.29,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.29,c:"CAD"}]},
+{id:25,name:"Avocado",unit:"each",cat:"produce",country:"CA",photo:"avocado",stores:[{s:"Walmart",f:"🛒",p:1.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:1.79,c:"CAD"},{s:"Sobeys",f:"🏪",p:1.69,c:"CAD"},{s:"Costco",f:"📦",p:1.25,c:"CAD",n:"6-pack"}]},
+{id:26,name:"Bananas",unit:"per lb",cat:"produce",country:"CA",photo:"bananas",stores:[{s:"Walmart",f:"🛒",p:0.63,c:"CAD"},{s:"Loblaws",f:"🛍️",p:0.69,c:"CAD"},{s:"Sobeys",f:"🏪",p:0.69,c:"CAD"},{s:"Metro",f:"🏬",p:0.79,c:"CAD"}]},
+{id:27,name:"Gala Apples",unit:"3 lb bag",cat:"produce",country:"CA",photo:"apples",stores:[{s:"Walmart",f:"🛒",p:4.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:5.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:5.49,c:"CAD"},{s:"Costco",f:"📦",p:4.49,c:"CAD",n:"5 lb bag"}]},
+{id:28,name:"Oranges",unit:"4 lb bag",cat:"produce",country:"CA",photo:"oranges",stores:[{s:"Walmart",f:"🛒",p:4.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:5.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:5.49,c:"CAD"}]},
+{id:29,name:"Strawberries",unit:"1 lb",cat:"produce",country:"CA",photo:"strawberries",stores:[{s:"Walmart",f:"🛒",p:3.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:4.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:4.49,c:"CAD"},{s:"Costco",f:"📦",p:3.49,c:"CAD",n:"2 lb"}]},
+{id:30,name:"Blueberries",unit:"1 pint",cat:"produce",country:"CA",photo:"blueberries",stores:[{s:"Walmart",f:"🛒",p:3.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:3.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.99,c:"CAD"}]},
+{id:31,name:"Lemons",unit:"6-pack",cat:"produce",country:"CA",photo:"lemons",stores:[{s:"Walmart",f:"🛒",p:2.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:2.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:2.79,c:"CAD"}]},
+{id:32,name:"Zucchini",unit:"per lb",cat:"produce",country:"CA",photo:"zucchini",stores:[{s:"Walmart",f:"🛒",p:1.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:2.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:2.29,c:"CAD"}]},
+{id:33,name:"Grapes",unit:"2 lb bag",cat:"produce",country:"CA",photo:"grapes",stores:[{s:"Walmart",f:"🛒",p:4.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:5.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:5.49,c:"CAD"}]},
+// PRODUCE US
+{id:34,name:"Broccoli",unit:"per lb",cat:"produce",country:"US",photo:"broccoli",stores:[{s:"Walmart",f:"🛒",p:0.98,c:"USD"},{s:"Aldi",f:"🏷️",p:0.89,c:"USD"},{s:"Kroger",f:"🛍️",p:1.29,c:"USD"},{s:"Trader Joe's",f:"🌻",p:0.99,c:"USD"}]},
+{id:35,name:"Romaine Lettuce",unit:"1 head",cat:"produce",country:"US",photo:"lettuce",stores:[{s:"Walmart",f:"🛒",p:1.28,c:"USD"},{s:"Aldi",f:"🏷️",p:0.99,c:"USD"},{s:"Kroger",f:"🛍️",p:1.49,c:"USD"},{s:"Trader Joe's",f:"🌻",p:1.29,c:"USD"}]},
+{id:36,name:"Bananas",unit:"per lb",cat:"produce",country:"US",photo:"bananas",stores:[{s:"Walmart",f:"🛒",p:0.54,c:"USD"},{s:"Aldi",f:"🏷️",p:0.49,c:"USD"},{s:"Costco",f:"📦",p:0.44,c:"USD"},{s:"Trader Joe's",f:"🌻",p:0.19,c:"USD",n:"per banana"},{s:"Kroger",f:"🛍️",p:0.59,c:"USD"}]},
+{id:37,name:"Strawberries",unit:"1 lb",cat:"produce",country:"US",photo:"strawberries",stores:[{s:"Walmart",f:"🛒",p:2.88,c:"USD"},{s:"Aldi",f:"🏷️",p:2.49,c:"USD"},{s:"Costco",f:"📦",p:1.89,c:"USD",n:"4 lb flat"},{s:"Trader Joe's",f:"🌻",p:2.99,c:"USD"},{s:"Kroger",f:"🛍️",p:3.49,c:"USD"}]},
+{id:38,name:"Avocado",unit:"each",cat:"produce",country:"US",photo:"avocado",stores:[{s:"Walmart",f:"🛒",p:0.97,c:"USD"},{s:"Aldi",f:"🏷️",p:0.79,c:"USD"},{s:"Trader Joe's",f:"🌻",p:0.69,c:"USD"},{s:"Kroger",f:"🛍️",p:1.29,c:"USD"}]},
+{id:39,name:"Yellow Onions",unit:"3 lb bag",cat:"produce",country:"US",photo:"onions",stores:[{s:"Walmart",f:"🛒",p:2.48,c:"USD"},{s:"Aldi",f:"🏷️",p:1.99,c:"USD"},{s:"Kroger",f:"🛍️",p:2.99,c:"USD"}]},
+{id:40,name:"Potatoes",unit:"5 lb bag",cat:"produce",country:"US",photo:"potatoes",stores:[{s:"Walmart",f:"🛒",p:4.48,c:"USD"},{s:"Aldi",f:"🏷️",p:3.49,c:"USD"},{s:"Costco",f:"📦",p:3.99,c:"USD",n:"10 lb"},{s:"Kroger",f:"🛍️",p:4.99,c:"USD"}]},
+{id:41,name:"Tomatoes",unit:"per lb",cat:"produce",country:"US",photo:"tomatoes",stores:[{s:"Walmart",f:"🛒",p:0.97,c:"USD"},{s:"Aldi",f:"🏷️",p:0.79,c:"USD"},{s:"Trader Joe's",f:"🌻",p:1.29,c:"USD"},{s:"Kroger",f:"🛍️",p:1.49,c:"USD"}]},
+{id:42,name:"Spinach",unit:"5 oz bag",cat:"produce",country:"US",photo:"spinach",stores:[{s:"Walmart",f:"🛒",p:2.88,c:"USD"},{s:"Aldi",f:"🏷️",p:2.29,c:"USD"},{s:"Trader Joe's",f:"🌻",p:2.49,c:"USD"},{s:"Kroger",f:"🛍️",p:3.49,c:"USD"}]},
+{id:43,name:"Blueberries",unit:"1 pint",cat:"produce",country:"US",photo:"blueberries",stores:[{s:"Walmart",f:"🛒",p:3.28,c:"USD"},{s:"Aldi",f:"🏷️",p:2.49,c:"USD"},{s:"Costco",f:"📦",p:2.49,c:"USD",n:"18 oz"},{s:"Trader Joe's",f:"🌻",p:3.49,c:"USD"}]},
+{id:44,name:"Grapes",unit:"2 lb bag",cat:"produce",country:"US",photo:"grapes",stores:[{s:"Walmart",f:"🛒",p:3.98,c:"USD"},{s:"Aldi",f:"🏷️",p:2.99,c:"USD"},{s:"Costco",f:"📦",p:2.49,c:"USD",n:"3 lb"},{s:"Kroger",f:"🛍️",p:4.49,c:"USD"}]},
+{id:45,name:"Limes",unit:"6-pack",cat:"produce",country:"US",photo:"limes",stores:[{s:"Walmart",f:"🛒",p:1.28,c:"USD"},{s:"Aldi",f:"🏷️",p:0.99,c:"USD"},{s:"Trader Joe's",f:"🌻",p:0.19,c:"USD",n:"each"},{s:"Kroger",f:"🛍️",p:1.49,c:"USD"}]},
+// MEAT CA
+{id:46,name:"Ground Beef (lean)",unit:"450 g",cat:"meat",country:"CA",photo:"ground beef",stores:[{s:"Walmart",f:"🛒",p:7.98,c:"CAD"},{s:"Loblaws",f:"🛍️",p:8.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:8.99,c:"CAD"},{s:"Metro",f:"🏬",p:8.79,c:"CAD"},{s:"Costco",f:"📦",p:6.99,c:"CAD",n:"value pack"}]},
+{id:47,name:"Striploin Steak",unit:"per lb",cat:"meat",country:"CA",photo:"beef steak",stores:[{s:"Walmart",f:"🛒",p:16.98,c:"CAD"},{s:"Loblaws",f:"🛍️",p:19.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:18.99,c:"CAD"},{s:"Costco",f:"📦",p:14.99,c:"CAD",n:"whole loin"}]},
+{id:48,name:"Chicken Breast",unit:"per lb (boneless)",cat:"meat",country:"CA",photo:"chicken breast",stores:[{s:"Walmart",f:"🛒",p:8.79,c:"CAD"},{s:"Loblaws",f:"🛍️",p:9.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:10.49,c:"CAD"},{s:"Costco",f:"📦",p:7.49,c:"CAD",n:"value pack"}]},
+{id:49,name:"Pork Chops",unit:"per lb",cat:"meat",country:"CA",photo:"pork chops",stores:[{s:"Walmart",f:"🛒",p:7.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:8.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:8.49,c:"CAD"}]},
+{id:50,name:"Bacon",unit:"375 g",cat:"meat",country:"CA",photo:"bacon",stores:[{s:"Walmart",f:"🛒",p:6.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:7.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:7.49,c:"CAD"},{s:"Costco",f:"📦",p:5.99,c:"CAD",n:"per 375g equiv"}]},
+{id:51,name:"Sausages",unit:"500 g pkg",cat:"meat",country:"CA",photo:"sausage",stores:[{s:"Walmart",f:"🛒",p:5.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:6.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:6.49,c:"CAD"}]},
+// MEAT US
+{id:52,name:"Ground Beef 80/20",unit:"per lb",cat:"meat",country:"US",photo:"ground beef",stores:[{s:"Walmart",f:"🛒",p:5.49,c:"USD"},{s:"Aldi",f:"🏷️",p:4.29,c:"USD"},{s:"Costco",f:"📦",p:4.79,c:"USD",n:"5+ lb"},{s:"Kroger",f:"🛍️",p:6.33,c:"USD"},{s:"Target",f:"🎯",p:6.69,c:"USD"}]},
+{id:53,name:"Chicken Breast",unit:"per lb (boneless)",cat:"meat",country:"US",photo:"chicken breast",stores:[{s:"Walmart",f:"🛒",p:3.47,c:"USD"},{s:"Aldi",f:"🏷️",p:2.99,c:"USD"},{s:"Costco",f:"📦",p:3.29,c:"USD"},{s:"Kroger",f:"🛍️",p:3.99,c:"USD"},{s:"Whole Foods",f:"🌿",p:6.99,c:"USD",n:"organic"}]},
+{id:54,name:"Bacon",unit:"16 oz",cat:"meat",country:"US",photo:"bacon",stores:[{s:"Walmart",f:"🛒",p:5.48,c:"USD"},{s:"Aldi",f:"🏷️",p:4.49,c:"USD"},{s:"Costco",f:"📦",p:4.29,c:"USD",n:"4-pack"},{s:"Kroger",f:"🛍️",p:6.99,c:"USD"}]},
+{id:55,name:"Pork Chops",unit:"per lb",cat:"meat",country:"US",photo:"pork chops",stores:[{s:"Walmart",f:"🛒",p:3.98,c:"USD"},{s:"Aldi",f:"🏷️",p:3.49,c:"USD"},{s:"Kroger",f:"🛍️",p:4.99,c:"USD"}]},
+{id:56,name:"Hot Dogs",unit:"12-pack",cat:"meat",country:"US",photo:"hot dogs",stores:[{s:"Walmart",f:"🛒",p:2.98,c:"USD"},{s:"Aldi",f:"🏷️",p:2.49,c:"USD"},{s:"Costco",f:"📦",p:1.99,c:"USD",n:"per 12 equiv"},{s:"Kroger",f:"🛍️",p:3.79,c:"USD"}]},
+// SEAFOOD CA
+{id:57,name:"Atlantic Salmon",unit:"per lb (fillet)",cat:"seafood",country:"CA",photo:"salmon",stores:[{s:"Walmart",f:"🛒",p:12.98,c:"CAD"},{s:"Loblaws",f:"🛍️",p:14.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:13.99,c:"CAD"},{s:"Costco",f:"📦",p:11.99,c:"CAD"}]},
+{id:58,name:"Shrimp (frozen)",unit:"400 g",cat:"seafood",country:"CA",photo:"shrimp",stores:[{s:"Walmart",f:"🛒",p:8.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:10.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:9.99,c:"CAD"},{s:"Costco",f:"📦",p:7.49,c:"CAD"}]},
+{id:59,name:"Canned Tuna",unit:"170 g can",cat:"seafood",country:"CA",photo:"tuna",stores:[{s:"Walmart",f:"🛒",p:1.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:2.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:2.29,c:"CAD"}]},
+{id:60,name:"Tilapia Fillets",unit:"per lb (frozen)",cat:"seafood",country:"CA",photo:"tilapia",stores:[{s:"Walmart",f:"🛒",p:7.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:9.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:8.99,c:"CAD"},{s:"Costco",f:"📦",p:6.99,c:"CAD"}]},
+// SEAFOOD US
+{id:61,name:"Atlantic Salmon",unit:"per lb (fillet)",cat:"seafood",country:"US",photo:"salmon",stores:[{s:"Walmart",f:"🛒",p:8.98,c:"USD"},{s:"Costco",f:"📦",p:7.99,c:"USD"},{s:"Kroger",f:"🛍️",p:9.99,c:"USD"},{s:"Whole Foods",f:"🌿",p:12.99,c:"USD"}]},
+{id:62,name:"Shrimp (frozen)",unit:"1 lb",cat:"seafood",country:"US",photo:"shrimp",stores:[{s:"Walmart",f:"🛒",p:5.98,c:"USD"},{s:"Aldi",f:"🏷️",p:4.99,c:"USD"},{s:"Costco",f:"📦",p:4.49,c:"USD"},{s:"Kroger",f:"🛍️",p:6.99,c:"USD"}]},
+{id:63,name:"Canned Tuna",unit:"5 oz can",cat:"seafood",country:"US",photo:"tuna",stores:[{s:"Walmart",f:"🛒",p:1.28,c:"USD"},{s:"Aldi",f:"🏷️",p:0.99,c:"USD"},{s:"Costco",f:"📦",p:0.89,c:"USD",n:"8-pack"},{s:"Kroger",f:"🛍️",p:1.49,c:"USD"}]},
+{id:64,name:"Cod Fillet",unit:"per lb (fresh)",cat:"seafood",country:"US",photo:"cod",stores:[{s:"Walmart",f:"🛒",p:7.48,c:"USD"},{s:"Kroger",f:"🛍️",p:8.99,c:"USD"},{s:"Whole Foods",f:"🌿",p:11.99,c:"USD"}]},
+// FROZEN CA
+{id:65,name:"Ice Cream",unit:"1.5 L tub",cat:"frozen",country:"CA",photo:"ice cream",stores:[{s:"Walmart",f:"🛒",p:5.48,c:"CAD"},{s:"Loblaws",f:"🛍️",p:6.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:6.49,c:"CAD"},{s:"Costco",f:"📦",p:4.99,c:"CAD"}]},
+{id:66,name:"Frozen Berries",unit:"600 g",cat:"frozen",country:"CA",photo:"frozen berries",stores:[{s:"Walmart",f:"🛒",p:4.66,c:"CAD"},{s:"Loblaws",f:"🛍️",p:5.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:5.49,c:"CAD"},{s:"Costco",f:"📦",p:3.99,c:"CAD"}]},
+{id:67,name:"Frozen Peas",unit:"750 g",cat:"frozen",country:"CA",photo:"frozen peas",stores:[{s:"Walmart",f:"🛒",p:2.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:3.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.29,c:"CAD"}]},
+// FROZEN US
+{id:68,name:"Ice Cream",unit:"1.5 qt",cat:"frozen",country:"US",photo:"ice cream",stores:[{s:"Walmart",f:"🛒",p:4.98,c:"USD"},{s:"Aldi",f:"🏷️",p:3.49,c:"USD"},{s:"Costco",f:"📦",p:3.99,c:"USD"},{s:"Trader Joe's",f:"🌻",p:5.49,c:"USD"}]},
+{id:69,name:"Frozen Peas",unit:"16 oz",cat:"frozen",country:"US",photo:"frozen peas",stores:[{s:"Walmart",f:"🛒",p:1.78,c:"USD"},{s:"Aldi",f:"🏷️",p:1.29,c:"USD"},{s:"Trader Joe's",f:"🌻",p:1.99,c:"USD"},{s:"Kroger",f:"🛍️",p:2.29,c:"USD"}]},
+{id:70,name:"Frozen Pizza",unit:"12 inch",cat:"frozen",country:"US",photo:"frozen pizza",stores:[{s:"Walmart",f:"🛒",p:4.98,c:"USD"},{s:"Aldi",f:"🏷️",p:3.49,c:"USD"},{s:"Costco",f:"📦",p:4.29,c:"USD",n:"2-pack"},{s:"Trader Joe's",f:"🌻",p:4.99,c:"USD"}]},
+// PANTRY CA
+{id:71,name:"Pasta",unit:"500 g",cat:"pantry",country:"CA",photo:"pasta",stores:[{s:"Walmart",f:"🛒",p:1.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:2.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.49,c:"CAD"},{s:"Costco",f:"📦",p:1.33,c:"CAD",n:"9-pack deal"}]},
+{id:72,name:"Basmati Rice",unit:"907 g",cat:"pantry",country:"CA",photo:"rice",stores:[{s:"Walmart",f:"🛒",p:6.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:6.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:8.79,c:"CAD"}]},
+{id:73,name:"Olive Oil",unit:"per litre",cat:"pantry",country:"CA",photo:"olive oil",stores:[{s:"Walmart",f:"🛒",p:10.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:17.33,c:"CAD"},{s:"Sobeys",f:"🏪",p:15.25,c:"CAD"},{s:"Costco",f:"📦",p:10.99,c:"CAD",n:"Kirkland 2L"}]},
+{id:74,name:"Peanut Butter",unit:"1 kg",cat:"pantry",country:"CA",photo:"peanut butter",stores:[{s:"Walmart",f:"🛒",p:6.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:7.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:7.49,c:"CAD"},{s:"Costco",f:"📦",p:5.99,c:"CAD"}]},
+{id:75,name:"Canned Beans",unit:"540 mL",cat:"pantry",country:"CA",photo:"canned beans",stores:[{s:"Walmart",f:"🛒",p:1.37,c:"CAD"},{s:"Loblaws",f:"🛍️",p:1.50,c:"CAD"},{s:"Sobeys",f:"🏪",p:2.29,c:"CAD"}]},
+{id:76,name:"Canned Tomatoes",unit:"796 mL",cat:"pantry",country:"CA",photo:"canned tomatoes",stores:[{s:"Walmart",f:"🛒",p:1.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:1.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:1.79,c:"CAD"}]},
+{id:77,name:"Rolled Oats",unit:"1 kg",cat:"pantry",country:"CA",photo:"oats",stores:[{s:"Walmart",f:"🛒",p:4.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:5.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:4.99,c:"CAD"},{s:"Costco",f:"📦",p:3.99,c:"CAD"}]},
+{id:78,name:"All-Purpose Flour",unit:"2.5 kg",cat:"pantry",country:"CA",photo:"flour",stores:[{s:"Walmart",f:"🛒",p:4.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:5.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:5.49,c:"CAD"}]},
+{id:79,name:"Honey",unit:"500 g",cat:"pantry",country:"CA",photo:"honey",stores:[{s:"Walmart",f:"🛒",p:6.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:8.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:7.99,c:"CAD"},{s:"Costco",f:"📦",p:5.99,c:"CAD"}]},
+{id:80,name:"Ketchup",unit:"1 L",cat:"pantry",country:"CA",photo:"ketchup",stores:[{s:"Walmart",f:"🛒",p:3.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:4.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:4.49,c:"CAD"}]},
+// PANTRY US
+{id:81,name:"Peanut Butter",unit:"40 oz",cat:"pantry",country:"US",photo:"peanut butter",stores:[{s:"Walmart",f:"🛒",p:3.62,c:"USD"},{s:"Aldi",f:"🏷️",p:2.99,c:"USD"},{s:"Costco",f:"📦",p:2.49,c:"USD"},{s:"Trader Joe's",f:"🌻",p:3.49,c:"USD"},{s:"Kroger",f:"🛍️",p:4.29,c:"USD"}]},
+{id:82,name:"Olive Oil",unit:"per litre",cat:"pantry",country:"US",photo:"olive oil",stores:[{s:"Walmart",f:"🛒",p:8.97,c:"USD"},{s:"Aldi",f:"🏷️",p:5.99,c:"USD"},{s:"Costco",f:"📦",p:5.49,c:"USD"},{s:"Trader Joe's",f:"🌻",p:7.99,c:"USD"}]},
+{id:83,name:"Pasta",unit:"16 oz",cat:"pantry",country:"US",photo:"pasta",stores:[{s:"Walmart",f:"🛒",p:1.28,c:"USD"},{s:"Aldi",f:"🏷️",p:0.99,c:"USD"},{s:"Costco",f:"📦",p:0.89,c:"USD",n:"6-pack"},{s:"Trader Joe's",f:"🌻",p:1.49,c:"USD"},{s:"Kroger",f:"🛍️",p:1.59,c:"USD"}]},
+{id:84,name:"White Rice",unit:"5 lb",cat:"pantry",country:"US",photo:"rice",stores:[{s:"Walmart",f:"🛒",p:4.98,c:"USD"},{s:"Aldi",f:"🏷️",p:3.49,c:"USD"},{s:"Costco",f:"📦",p:3.29,c:"USD",n:"25 lb bag"},{s:"Kroger",f:"🛍️",p:5.49,c:"USD"}]},
+{id:85,name:"Honey",unit:"12 oz",cat:"pantry",country:"US",photo:"honey",stores:[{s:"Walmart",f:"🛒",p:3.98,c:"USD"},{s:"Aldi",f:"🏷️",p:3.49,c:"USD"},{s:"Trader Joe's",f:"🌻",p:4.99,c:"USD"},{s:"Kroger",f:"🛍️",p:5.49,c:"USD"}]},
+{id:86,name:"Mayonnaise",unit:"30 oz",cat:"pantry",country:"US",photo:"mayonnaise",stores:[{s:"Walmart",f:"🛒",p:4.48,c:"USD"},{s:"Aldi",f:"🏷️",p:3.29,c:"USD"},{s:"Costco",f:"📦",p:3.99,c:"USD"},{s:"Kroger",f:"🛍️",p:5.49,c:"USD"}]},
+// BAKERY CA
+{id:87,name:"White Bread",unit:"675 g loaf",cat:"bakery",country:"CA",photo:"white bread",stores:[{s:"Walmart",f:"🛒",p:2.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:3.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.49,c:"CAD"},{s:"Costco",f:"📦",p:2.17,c:"CAD",n:"3-pack"}]},
+{id:88,name:"Whole Wheat Bread",unit:"675 g loaf",cat:"bakery",country:"CA",photo:"wheat bread",stores:[{s:"Walmart",f:"🛒",p:3.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:4.29,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.99,c:"CAD"},{s:"Costco",f:"📦",p:2.33,c:"CAD",n:"3-pack"}]},
+{id:89,name:"Bagels",unit:"6-pack",cat:"bakery",country:"CA",photo:"bagels",stores:[{s:"Walmart",f:"🛒",p:3.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:4.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:4.29,c:"CAD"}]},
+{id:90,name:"Flour Tortillas",unit:"10-pack",cat:"bakery",country:"CA",photo:"tortillas",stores:[{s:"Walmart",f:"🛒",p:3.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:4.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.99,c:"CAD"}]},
+// BAKERY US
+{id:91,name:"White Bread",unit:"20 oz loaf",cat:"bakery",country:"US",photo:"white bread",stores:[{s:"Walmart",f:"🛒",p:1.68,c:"USD"},{s:"Aldi",f:"🏷️",p:1.29,c:"USD"},{s:"Costco",f:"📦",p:1.49,c:"USD",n:"2-pack"},{s:"Kroger",f:"🛍️",p:2.49,c:"USD"}]},
+{id:92,name:"Whole Wheat Bread",unit:"24 oz loaf",cat:"bakery",country:"US",photo:"wheat bread",stores:[{s:"Walmart",f:"🛒",p:2.68,c:"USD"},{s:"Aldi",f:"🏷️",p:2.28,c:"USD"},{s:"Trader Joe's",f:"🌻",p:2.99,c:"USD"},{s:"Kroger",f:"🛍️",p:3.49,c:"USD"}]},
+{id:93,name:"Bagels",unit:"6-pack",cat:"bakery",country:"US",photo:"bagels",stores:[{s:"Walmart",f:"🛒",p:2.98,c:"USD"},{s:"Aldi",f:"🏷️",p:2.49,c:"USD"},{s:"Trader Joe's",f:"🌻",p:3.49,c:"USD"},{s:"Kroger",f:"🛍️",p:4.49,c:"USD"}]},
+// BEVERAGES CA
+{id:94,name:"Ground Coffee",unit:"875 g",cat:"beverages",country:"CA",photo:"coffee",stores:[{s:"Walmart",f:"🛒",p:29.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:28.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:34.99,c:"CAD"},{s:"Costco",f:"📦",p:25.99,c:"CAD",n:"Kirkland 1.36kg"}]},
+{id:95,name:"Orange Juice",unit:"1.75 L",cat:"beverages",country:"CA",photo:"orange juice",stores:[{s:"Walmart",f:"🛒",p:5.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:6.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:5.99,c:"CAD"},{s:"Costco",f:"📦",p:4.99,c:"CAD"}]},
+// BEVERAGES US
+{id:96,name:"Ground Coffee",unit:"30.5 oz",cat:"beverages",country:"US",photo:"coffee",stores:[{s:"Walmart",f:"🛒",p:13.98,c:"USD"},{s:"Aldi",f:"🏷️",p:8.99,c:"USD"},{s:"Costco",f:"📦",p:9.99,c:"USD",n:"Kirkland 3 lb"},{s:"Trader Joe's",f:"🌻",p:11.99,c:"USD"}]},
+{id:97,name:"Orange Juice",unit:"52 fl oz",cat:"beverages",country:"US",photo:"orange juice",stores:[{s:"Walmart",f:"🛒",p:6.48,c:"USD"},{s:"Aldi",f:"🏷️",p:5.49,c:"USD"},{s:"Costco",f:"📦",p:4.99,c:"USD"},{s:"Trader Joe's",f:"🌻",p:5.99,c:"USD"},{s:"Kroger",f:"🛍️",p:6.99,c:"USD"}]},
+{id:98,name:"Apple Juice",unit:"64 oz",cat:"beverages",country:"US",photo:"apple juice",stores:[{s:"Walmart",f:"🛒",p:2.98,c:"USD"},{s:"Aldi",f:"🏷️",p:2.49,c:"USD"},{s:"Trader Joe's",f:"🌻",p:3.49,c:"USD"},{s:"Kroger",f:"🛍️",p:3.99,c:"USD"}]},
+// SNACKS
+{id:99,name:"Potato Chips",unit:"200 g",cat:"snacks",country:"CA",photo:"chips",stores:[{s:"Walmart",f:"🛒",p:3.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:4.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:4.49,c:"CAD"},{s:"Costco",f:"📦",p:2.99,c:"CAD",n:"per 200g equiv"}]},
+{id:100,name:"Almonds",unit:"16 oz",cat:"snacks",country:"US",photo:"almonds",stores:[{s:"Walmart",f:"🛒",p:7.48,c:"USD"},{s:"Aldi",f:"🏷️",p:5.99,c:"USD"},{s:"Costco",f:"📦",p:4.99,c:"USD"},{s:"Trader Joe's",f:"🌻",p:7.99,c:"USD"}]},
+// HOUSEHOLD CA
+{id:101,name:"Shampoo",unit:"400 mL",cat:"household",country:"CA",photo:"shampoo",stores:[{s:"Walmart",f:"🛒",p:5.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:7.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:7.49,c:"CAD"},{s:"Costco",f:"📦",p:4.49,c:"CAD",n:"per 400mL equiv"}]},
+{id:102,name:"Conditioner",unit:"400 mL",cat:"household",country:"CA",photo:"conditioner",stores:[{s:"Walmart",f:"🛒",p:5.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:7.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:7.49,c:"CAD"},{s:"Costco",f:"📦",p:4.49,c:"CAD",n:"per 400mL equiv"}]},
+{id:103,name:"Body Wash",unit:"532 mL",cat:"household",country:"CA",photo:"body wash",stores:[{s:"Walmart",f:"🛒",p:4.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:6.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:6.49,c:"CAD"},{s:"Costco",f:"📦",p:3.99,c:"CAD",n:"per bottle equiv"}]},
+{id:104,name:"Body Lotion",unit:"473 mL",cat:"household",country:"CA",photo:"body lotion",stores:[{s:"Walmart",f:"🛒",p:5.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:7.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:6.99,c:"CAD"},{s:"Costco",f:"📦",p:4.29,c:"CAD",n:"per equiv from 2-pack"}]},
+{id:105,name:"Toothpaste",unit:"170 mL",cat:"household",country:"CA",photo:"toothpaste",stores:[{s:"Walmart",f:"🛒",p:3.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:5.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:4.99,c:"CAD"},{s:"Costco",f:"📦",p:2.99,c:"CAD",n:"5-pack equiv"}]},
+{id:106,name:"Deodorant",unit:"76 g stick",cat:"household",country:"CA",photo:"deodorant",stores:[{s:"Walmart",f:"🛒",p:5.47,c:"CAD"},{s:"Loblaws",f:"🛍️",p:6.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:6.49,c:"CAD"},{s:"Costco",f:"📦",p:4.49,c:"CAD",n:"3-pack equiv"}]},
+{id:107,name:"Hand Soap",unit:"221 mL pump",cat:"household",country:"CA",photo:"hand soap",stores:[{s:"Walmart",f:"🛒",p:2.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:3.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.49,c:"CAD"},{s:"Costco",f:"📦",p:2.49,c:"CAD",n:"6-pack equiv"}]},
+{id:108,name:"Dish Soap",unit:"638 mL",cat:"household",country:"CA",photo:"dish soap",stores:[{s:"Walmart",f:"🛒",p:3.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:4.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:4.49,c:"CAD"}]},
+{id:109,name:"Paper Towels",unit:"6-pack",cat:"household",country:"CA",photo:"paper towels",stores:[{s:"Walmart",f:"🛒",p:7.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:9.49,c:"CAD"},{s:"Sobeys",f:"🏪",p:8.99,c:"CAD"},{s:"Costco",f:"📦",p:6.49,c:"CAD",n:"per 6 from 12-pk"}]},
+{id:110,name:"Toothbrush",unit:"each (soft)",cat:"household",country:"CA",photo:"toothbrush",stores:[{s:"Walmart",f:"🛒",p:2.97,c:"CAD"},{s:"Loblaws",f:"🛍️",p:3.99,c:"CAD"},{s:"Sobeys",f:"🏪",p:3.49,c:"CAD"},{s:"Costco",f:"📦",p:1.99,c:"CAD",n:"8-pack equiv"}]},
+// HOUSEHOLD US
+{id:111,name:"Shampoo",unit:"12.6 fl oz",cat:"household",country:"US",photo:"shampoo",stores:[{s:"Walmart",f:"🛒",p:4.97,c:"USD"},{s:"Aldi",f:"🏷️",p:3.49,c:"USD"},{s:"Costco",f:"📦",p:3.79,c:"USD",n:"per bottle equiv"},{s:"Target",f:"🎯",p:6.99,c:"USD"},{s:"Kroger",f:"🛍️",p:6.49,c:"USD"}]},
+{id:112,name:"Conditioner",unit:"12.6 fl oz",cat:"household",country:"US",photo:"conditioner",stores:[{s:"Walmart",f:"🛒",p:4.97,c:"USD"},{s:"Aldi",f:"🏷️",p:3.49,c:"USD"},{s:"Costco",f:"📦",p:3.79,c:"USD",n:"per bottle equiv"},{s:"Target",f:"🎯",p:6.99,c:"USD"},{s:"Kroger",f:"🛍️",p:6.49,c:"USD"}]},
+{id:113,name:"Body Wash",unit:"18 fl oz",cat:"household",country:"US",photo:"body wash",stores:[{s:"Walmart",f:"🛒",p:3.97,c:"USD"},{s:"Aldi",f:"🏷️",p:2.99,c:"USD"},{s:"Costco",f:"📦",p:3.29,c:"USD",n:"per bottle equiv"},{s:"Target",f:"🎯",p:5.99,c:"USD"},{s:"Kroger",f:"🛍️",p:5.49,c:"USD"}]},
+{id:114,name:"Body Lotion",unit:"16 fl oz",cat:"household",country:"US",photo:"body lotion",stores:[{s:"Walmart",f:"🛒",p:4.48,c:"USD"},{s:"Aldi",f:"🏷️",p:3.49,c:"USD"},{s:"Costco",f:"📦",p:3.49,c:"USD",n:"per bottle equiv"},{s:"Target",f:"🎯",p:6.99,c:"USD"},{s:"Kroger",f:"🛍️",p:6.49,c:"USD"}]},
+{id:115,name:"Toothpaste",unit:"6 oz tube",cat:"household",country:"US",photo:"toothpaste",stores:[{s:"Walmart",f:"🛒",p:2.97,c:"USD"},{s:"Aldi",f:"🏷️",p:1.99,c:"USD"},{s:"Costco",f:"📦",p:1.99,c:"USD",n:"4-pack equiv"},{s:"Target",f:"🎯",p:4.49,c:"USD"},{s:"Kroger",f:"🛍️",p:3.99,c:"USD"}]},
+{id:116,name:"Deodorant",unit:"2.6 oz stick",cat:"household",country:"US",photo:"deodorant",stores:[{s:"Walmart",f:"🛒",p:3.97,c:"USD"},{s:"Aldi",f:"🏷️",p:2.99,c:"USD"},{s:"Costco",f:"📦",p:3.49,c:"USD",n:"3-pack equiv"},{s:"Target",f:"🎯",p:5.99,c:"USD"},{s:"Kroger",f:"🛍️",p:5.49,c:"USD"}]},
+{id:117,name:"Hand Soap",unit:"7.5 fl oz pump",cat:"household",country:"US",photo:"hand soap",stores:[{s:"Walmart",f:"🛒",p:1.97,c:"USD"},{s:"Aldi",f:"🏷️",p:1.49,c:"USD"},{s:"Costco",f:"📦",p:1.49,c:"USD",n:"6-pack equiv"},{s:"Target",f:"🎯",p:3.49,c:"USD"},{s:"Kroger",f:"🛍️",p:2.99,c:"USD"}]},
+{id:118,name:"Facial Cleanser",unit:"6 fl oz",cat:"household",country:"US",photo:"facial cleanser",stores:[{s:"Walmart",f:"🛒",p:5.97,c:"USD"},{s:"Aldi",f:"🏷️",p:4.49,c:"USD"},{s:"Target",f:"🎯",p:7.99,c:"USD"},{s:"Kroger",f:"🛍️",p:7.49,c:"USD"}]},
+{id:119,name:"Sunscreen SPF 50",unit:"3 fl oz",cat:"household",country:"US",photo:"sunscreen",stores:[{s:"Walmart",f:"🛒",p:7.97,c:"USD"},{s:"Costco",f:"📦",p:5.99,c:"USD",n:"per tube equiv"},{s:"Target",f:"🎯",p:9.99,c:"USD"},{s:"Kroger",f:"🛍️",p:9.49,c:"USD"}]},
+{id:120,name:"Toilet Paper",unit:"12 double rolls",cat:"household",country:"US",photo:"toilet paper",stores:[{s:"Walmart",f:"🛒",p:9.97,c:"USD"},{s:"Aldi",f:"🏷️",p:4.99,c:"USD",n:"6-pack"},{s:"Costco",f:"📦",p:7.99,c:"USD",n:"per 12 equiv"},{s:"Target",f:"🎯",p:12.99,c:"USD"},{s:"Kroger",f:"🛍️",p:11.99,c:"USD"}]},
+{id:121,name:"Laundry Detergent",unit:"50 fl oz",cat:"household",country:"US",photo:"laundry",stores:[{s:"Walmart",f:"🛒",p:9.97,c:"USD"},{s:"Aldi",f:"🏷️",p:7.99,c:"USD"},{s:"Costco",f:"📦",p:6.99,c:"USD",n:"per equiv"},{s:"Target",f:"🎯",p:13.49,c:"USD"},{s:"Kroger",f:"🛍️",p:12.99,c:"USD"}]},
+];
+
+let STATE = { country:'CA', cat:'all', sort:'name' };
+
+function setCountry(c) {
+  STATE.country = c;
+  ['CA','US','ALL'].forEach(k => {
+    const b = document.getElementById('btn-'+k.toLowerCase());
+    b.className = 'ctry-btn' + (k===c ? ' active-'+k.toLowerCase() : '');
+  });
+  render();
+}
+function setCat(c, btn) {
+  STATE.cat = c;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+function setSort(v) { STATE.sort = v; render(); }
+
+const cheapest = item => item.stores.reduce((a,b) => a.p<b.p?a:b);
+const minP = item => Math.min(...item.stores.map(s=>s.p));
+const maxP = item => Math.max(...item.stores.map(s=>s.p));
+const sav  = item => maxP(item)-minP(item);
+const avgP = item => item.stores.reduce((a,b)=>a+b.p,0)/item.stores.length;
+
+function render() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  let list = ITEMS.filter(item => {
+    const mq = !q || item.name.toLowerCase().includes(q) || item.cat.includes(q);
+    const mc = STATE.cat==='all' || item.cat===STATE.cat;
+    const mn = STATE.country==='ALL' || item.country===STATE.country;
+    return mq && mc && mn;
+  });
+  if (STATE.sort==='cheapest') list.sort((a,b)=>minP(a)-minP(b));
+  else if (STATE.sort==='savings') list.sort((a,b)=>sav(b)-sav(a));
+  else if (STATE.sort==='category') list.sort((a,b)=>a.cat.localeCompare(b.cat)||a.name.localeCompare(b.name));
+  else list.sort((a,b)=>a.name.localeCompare(b.name));
+
+  // Stats
+  const totalSav = list.length ? (list.reduce((s,i)=>s+sav(i),0)/list.length) : 0;
+  const baseCur = list.length ? (list[0].stores[0].c==='CAD'?'CA$':'US$') : '';
+  document.getElementById('avg-save-stat').textContent = list.length ? baseCur+totalSav.toFixed(2) : '—';
+
+  // Best deal
+  if (list.length) {
+    const best = list.reduce((a,b)=>sav(b)>sav(a)?b:a);
+    const bst = cheapest(best);
+    const bCur = bst.c==='CAD'?'CA$':'US$';
+    document.getElementById('best-text').innerHTML =
+      `<strong>${best.name}</strong> cheapest at <strong>${bst.s}</strong> — <span>${bCur}${bst.p.toFixed(2)}</span>&nbsp;· Save up to ${bCur}${sav(best).toFixed(2)} vs priciest store`;
+  }
+
+  document.getElementById('res-count').innerHTML = `Showing <strong>${list.length}</strong> item${list.length!==1?'s':''}`;
+
+  const grid = document.getElementById('grid');
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state"><h3>No items found</h3><p>Try a different search or category</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map((item, idx) => {
+    const min = minP(item), max = maxP(item);
+    const cur = item.stores[0].c==='CAD'?'CA$':'US$';
+    const savAmt = sav(item).toFixed(2);
+    const av = avgP(item).toFixed(2);
+    const photoUrl = getPhoto(item.photo||item.name);
+    const delay = Math.min(idx*0.025, 0.5);
+
+    const imgHtml = photoUrl
+      ? `<img src="${photoUrl}" alt="${item.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">\
+<div class="img-placeholder" style="display:none">${item.name[0]}</div>`
+      : `<div class="img-placeholder">${item.name[0]}</div>`;
+
+    const rows = [...item.stores].sort((a,b)=>a.p-b.p).map(s => {
+      const isBest = s.p===min;
+      const barPct = max>min ? Math.round(((max-s.p)/(max-min))*100) : 100;
+      return `<div class="prow${isBest?' best':''}">
+        <span style="font-size:.95rem;width:20px">${s.f}</span>
+        <span class="prow-store">${s.s}${s.n?`<br><span style="font-size:.59rem;color:var(--muted)">${s.n}</span>`:''}</span>
+        <div class="prow-bar-wrap"><div class="prow-bar" style="width:${barPct}%"></div></div>
+        <span class="prow-price">${cur}${s.p.toFixed(2)}</span>
+        <span class="prow-cur">${s.c}</span>
+        ${isBest?'<span class="best-tick">BEST</span>':''}
+      </div>`;
+    }).join('');
+
+    return `<div class="card" style="animation-delay:${delay}s">
+      <div class="card-img-wrap">${imgHtml}
+        <span class="card-country-badge badge-${item.country.toLowerCase()}">${item.country==='CA'?'🍁 CA':'🦅 US'}</span>
+        <span class="card-cat-badge">${item.cat}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-name">${item.name}</div>
+        <div class="card-unit">${item.unit}</div>
+        <div class="price-rows">${rows}</div>
+      </div>
+      <div class="card-footer">
+        <div class="cf-avg">Avg: <strong>${cur}${av}</strong></div>
+        ${parseFloat(savAmt)>0?`<div class="cf-save">Save up to ${cur}${savAmt}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+render();
+</script>
+</body>
+</html>
